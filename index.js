@@ -22,7 +22,7 @@ const logger = winston.createLogger({
 
 const logInfo = (message, data) => {
   logger.info(`Запрос на /api/${message}`, data);
-  console.log(message, data);
+  console.log(message, data ?? '');
 };
 
 /** Получить какую-то инфу */
