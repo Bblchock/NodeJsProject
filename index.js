@@ -14,23 +14,40 @@ app.use(cors({
   allowedHeaders: ['Content-Type', 'Authorization'],
 }));
 
-/** Конфиг логера */
-const logger = winston.createLogger({
-  level: "info",
+const commonLogParams = {
   format: winston.format.combine(
     winston.format.timestamp({
       format: "DD-MM-YYYY HH:mm:ss",
     }),
     winston.format.json(), // Формат записи в JSON
   ),
+};
+
+/** Конфиг логера общей инфы */
+const logger = winston.createLogger({
+  ...commonLogParams,
+  level: "info",
   transports: [
     new winston.transports.File({ filename: "logs/server.log" }), // Файл для записи всех логов
   ],
 });
 
+/** Конфиг логера ошибок */
+const errorLogger = winston.createLogger({
+  ...commonLogParams,
+  level: "error",
+  transports: [
+    new winston.transports.File({ filename: "logs/errors.log" }), // Отдельный файл для ошибок
+  ],
+});
+
 const logInfo = (message, data) => {
   logger.info(`Запрос на /api/${message}`, data);
-  console.log(message, data ?? '');
+  console.log(message, data ?? "");
+};
+const logError = (message, data) => {
+  errorLogger.error(`Ошибка при обработке запроса: ${message}`, data);
+  console.log(message, data ?? "");
 };
 
 /** Получить какую-то инфу */
@@ -53,13 +70,19 @@ app.get("/api/getFileData", ({ query }, response) => {
 
   fs.access(filePath, fs.constants.F_OK, (error) => {
     if (error) {
-      response.status(404).send("Файл не найден");
+      const message = "Файл не найден";
+      logError(message, error);
+
+      response.status(404).send(message);
       return;
     }
 
     fs.readFile(filePath, "utf8", (error, data) => {
       if (error) {
-        response.status(500).send("Ошибка при чтении файла");
+        const message = "Ошибка при чтении файла";
+        logError(message, error);
+
+        response.status(500).send(message);
         return;
       }
 
@@ -76,9 +99,12 @@ app.get("/api/getFile/:fileName", ({ params }, response) => {
 
   const filePath = path.join(__dirname, "files", fileName);
 
-  response.sendFile(filePath, (err) => {
-    if (err) {
-      response.status(404).send("Файл не найден");
+  response.sendFile(filePath, (error) => {
+    if (error) {
+      const message = "Файл не найден";
+      logError(message, error);
+
+      response.status(404).send(message);
       return;
     }
 
@@ -88,6 +114,5 @@ app.get("/api/getFile/:fileName", ({ params }, response) => {
 
 /** Старт сервера */
 app.listen(PORT, () => {
-  const message = `Сервер запущен на порту ${PORT}`;
-  logInfo(message);
+  logInfo(`Сервер запущен на порту ${PORT}`);
 });
