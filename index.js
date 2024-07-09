@@ -2,17 +2,19 @@ const express = require("express");
 const fs = require("fs");
 const path = require("path");
 const winston = require("winston");
-const cors = require('cors');
+const cors = require("cors");
 
 const app = express();
 const PORT = 3000;
 
 /** CORS политики */
-app.use(cors({
-  origin: 'http://localhost:3000',
-  methods: ['GET', 'POST', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
-}));
+app.use(
+  cors({
+    origin: "http://localhost:3000",
+    methods: ["GET", "POST", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+  }),
+);
 
 const commonLogParams = {
   format: winston.format.combine(
