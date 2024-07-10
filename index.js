@@ -1,56 +1,16 @@
-const express = require("express");
-const fs = require("fs");
-const path = require("path");
-const winston = require("winston");
-const cors = require("cors");
+import express from "express";
+import fs from "fs";
+import path from "path";
+import { fileURLToPath } from "url";
+import { logInfo, logError } from "./configs/loggers/index.js";
+import { corsConfig } from "./configs/cors/cors.js";
 
 const app = express();
 const PORT = 3000;
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 /** CORS политики */
-app.use(
-  cors({
-    origin: "http://localhost:3000",
-    methods: ["GET", "POST", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization"],
-  }),
-);
-
-const commonLogParams = {
-  format: winston.format.combine(
-    winston.format.timestamp({
-      format: "DD-MM-YYYY HH:mm:ss",
-    }),
-    winston.format.json(), // Формат записи в JSON
-  ),
-};
-
-/** Конфиг логера общей инфы */
-const logger = winston.createLogger({
-  ...commonLogParams,
-  level: "info",
-  transports: [
-    new winston.transports.File({ filename: "logs/server.log" }), // Файл для записи всех логов
-  ],
-});
-
-/** Конфиг логера ошибок */
-const errorLogger = winston.createLogger({
-  ...commonLogParams,
-  level: "error",
-  transports: [
-    new winston.transports.File({ filename: "logs/errors.log" }), // Отдельный файл для ошибок
-  ],
-});
-
-const logInfo = (message, data) => {
-  logger.info(`Запрос на /api/${message}`, data);
-  console.log(message, data ?? "");
-};
-const logError = (message, data) => {
-  errorLogger.error(`Ошибка при обработке запроса: ${message}`, data);
-  console.log(message, data ?? "");
-};
+app.use(corsConfig);
 
 /** Получить какую-то инфу */
 app.get("/api/getInfo", (req, response) => {
